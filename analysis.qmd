@@ -51,6 +51,8 @@ age_ca <- get_acs(
 ```
 
 ```{r}
+#| fig-height: 14
+#| fig-width: 10
 edu_state %>%
   group_by(GEOID, NAME) %>%
   summarise(
