@@ -27,26 +27,52 @@ income_tx <- get_acs(
 ```
 
 ```{r}
-ggplot(income_tx) +
-  geom_sf(aes(fill = estimate), color = "white", linewidth = 0.1) +
-  scale_fill_viridis_c(
-    option = "viridis",
-    begin = 0.05,
-    end = 0.95,
-    labels = scales::dollar_format()
-  ) +
+#| message: false
+#| cache: true
+edu_state <- get_acs(
+  geography = "state",
+  variables = c("B15003_001", "B15003_022", "B15003_023", "B15003_024", "B15003_025"),
+  summary_var = "B15003_001",
+  year = 2020,
+  key = "a07e75395383876b8ff28b168b696572a39e0566"
+)
+```
+
+```{r}
+edu_state %>%
+  group_by(GEOID, NAME) %>%
+  summarise(
+    total_adults = sum(estimate[variable == "B15003_001"], na.rm = TRUE),
+    bachelors_or_higher = sum(
+      estimate[variable %in% c("B15003_022", "B15003_023", "B15003_024", "B15003_025")],
+      na.rm = TRUE
+    ),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    percentage_bachelors_or_higher = 100 * bachelors_or_higher / total_adults
+  ) %>%
+  ggplot(aes(
+    x = percentage_bachelors_or_higher,
+    y = reorder(NAME, percentage_bachelors_or_higher)
+  )) +
+  geom_col(fill = "#31688e") +
   labs(
-    title = "Median Household Income by Texas County",
+    title = "Bachelor's-or-Higher Attainment by State",
     subtitle = "2020 ACS 5-year estimates",
-    fill = "Median household income",
+    x = "Adults with at least a bachelor's degree",
+    y = "State",
     caption = "Source: U.S. Census Bureau, American Community Survey 2020 5-year estimates"
   ) +
-  theme_void(base_size = 12) +
+  scale_x_continuous(labels = scales::label_percent(scale = 1)) +
+  theme_minimal(base_size = 12) +
   theme(
     plot.title = element_text(face = "bold"),
     plot.subtitle = element_text(color = "grey35"),
     plot.caption = element_text(color = "grey35", hjust = 0),
-    legend.title = element_text(face = "bold")
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.x = element_blank()
   )
 ```
+
 
